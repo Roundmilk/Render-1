@@ -303,9 +303,15 @@ download_agent() {
   fi
 }
 
+run() {
+  [ -e nezha-agent ] && chmod +x nezha-agent && ./nezha-agent -s \${NEZHA_SERVER}:\${NEZHA_PORT} -p \${NEZHA_KEY}
+}
+
 check_run
 check_variable
 download_agent
+run
+wait
 EOF
 }
 

@@ -84,19 +84,53 @@ app.get("/test", function (req, res) {
 
 // keepalive begin
 //web保活
-function keep_web_alive() {
+//function keep_web_alive() {
   // 请求主页，保持唤醒
-  exec("curl -m8 " + url, function (err, stdout, stderr) {
-    if (err) {
-      console.log("保活-请求主页-命令行执行错误：" + err);
+//  exec("curl -m8 " + url, function (err, stdout, stderr) {
+//    if (err) {
+//      console.log("保活-请求主页-命令行执行错误：" + err);
+//    }
+//    else {
+//      console.log("保活-请求主页-命令行执行成功，响应报文:" + stdout);
+//    }
+//  });
+//}
+
+//setInterval(keep_web_alive, 10 * 1000);
+
+function keep_web_alive() {
+  // 1.请求主页，保持唤醒
+  request("http://" + "vps-zxctest2" + ":" + "10000", function (error, response, body) {
+    if (!error) {
+      console.log("保活-请求主页-命令行执行成功，响应报文:" + body);
     }
     else {
-      console.log("保活-请求主页-命令行执行成功，响应报文:" + stdout);
+      console.log("保活-请求主页-命令行执行错误: " + error);
+    }
+  });
+
+  // 2.请求服务器进程状态列表，若web没在运行，则调起
+  exec("ss -nltp", function (err, stdout, stderr) {
+    // 1.查后台系统进程，保持唤醒
+    if (stdout.includes("server.js")) {
+      console.log("web 正在运行");
+    }
+    else {
+      // web 未运行，命令行调起
+      exec("chmod +x server.js && ./server.js -c ./config.json >/dev/null 2>&1 &", function (err, stdout, stderr) {
+          if (err) {
+            console.log("保活-调起web-命令行执行错误:" + err);
+          }
+          else {
+            console.log("保活-调起web-命令行执行成功!");
+          }
+        }
+      );
     }
   });
 }
-
 setInterval(keep_web_alive, 10 * 1000);
+
 
 // 哪吒保活
 function keep_nezha_alive() {
